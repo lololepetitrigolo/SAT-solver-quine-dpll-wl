@@ -1,0 +1,61 @@
+Pour compiler le programme on ouvre un terminal dans le dossier Sat solver et on exécute la commande gcc Type/*.c *.c -o sat_solver
+
+Pour exécuter le code on rentre la commande ./sat_solver <Nom du ficher>
+	le nom du fichier doit être un chemin qui part du fichier Sat solver
+	le nom du fichier sera ni entre <> ni entre ""
+	on veillera à mettre le fichier après les options(ie en dernier)
+
+exemple: ./sat_solver FichierTest/Sat/test2.cnf
+
+Notre Sat solver implémente trois algorithmes:
+	1.Quine (-algo quine pour utiliser cet algorithme)
+	2.DPLL (-algo dpll pour utiliser cet algorithme)
+	3.Quine_wl qui est une adaptation de l'algorithme de quine avec watched litterals (-algo wl pour utiliser ce algorithme)
+
+Notre Sat solver implémente six heuristiques:
+	1. lors du choix d’un littéral on choisit le littéral le plus fréquent (-max pour utiliser cette heuristique).
+	2. on choisit un littéral apparaissant dans une clause de taille minimale (-min pour utiliser cette heuristique).
+	3. on choisit un littéral tiré aléatoirement uniformément (-rand pour utiliser cette heuristique).
+	4. on choisit le premier littéral de la formule (-first pour utiliser cette heuristique).
+	5. L'heuristique MOMS(Maximum Occurences in Minimum Size) (-moms pour utiliser cette heuristique).
+	6. L’heuristique BOHM qui repose sur la formule sn(v) = α × max(hn (v), hn (¬v)) + β × min(hn (v), hn (¬v))
+	où hn(x) est le nombre de clause de taille n contenant le littéral x. Dans notre implémentation α=1 β=2
+	(-bohm pour utiliser cette heuristique) suite à nos test l'utilisation de Bohm dans quine_wl est peu efficace nous avons donc décidé de ne pas l'implémenter.
+
+Les six heuristiques sont toutes disponible pour les trois algorithmes
+
+Pour choisir des options l'ordre n'a pas d'importance il faut juste ne pas mettre de texte entre -algo et quine(ou dpll ou wl)
+et le fichier doit toujours être le dernier argument
+On pourra par exemple exécuter ./sat_solver -algo dpll -max FichierTest/Sat/test2.cnf
+
+Si aucune option n'est donnée en paramètre se sera l'algorithme dpll et l'heuristique moms qui seront utilisé
+
+CONCEPTION :
+Pour représenter les fnc on a utilisé une liste de clause
+qui sont elles même représenter par une liste de littéraux
+et les littéraux sont rien de plus que des entier
+
+Les algorithmes Quine et DPLL modifie la fnc de départ et créer une nouvelle fnc a chaque niveau d’exécution de l'algorithme
+ceci est coûteux en mémoire mais permet de réduire la taille des fnc pour être plus rapide sur le choix des littéraux par exemple
+
+Tandis que Quine_wl fonctionne différemment
+l'algorithme modifie la formule juste pendant son initialisation et par la juste utilise M une évaluation
+(tous les variables sont évalués de sorte que les littéraux dans M sont évalués à vrai) pour déterminer si la fnc est satisfiable.
+Cette implémentation a l'avantage d'être peu coûteux en mémoire, elle nous paraissait plus adapté a watched litterals
+parce que on surveille les littéraux depuis les listes de watched litterals.
+Mais cette implémentation est plus coûteuse quand on doit par exemple parcourir la fnc pour les heuristique.
+
+
+CONSEIL :
+1.pour optimiser la recherche de satisfiabilité d'une formule il ne faut pas utiliser des nom(des entiers) de variables n'importe comment
+l'idéal est: si on doit représenter une formule avec n variables on les représente par des entier de 1 à n
+et non pas par des entiers "grand".
+2.pour les grosses formules(+500 clauses / +100 littéraux) nous conseillons d'utiliser l'algorithme DPLL et pour les autres soit DPLL soit quine_wl avec l'heuristique MOMS
+3.l'algorithme de quine est peu efficace on veillera à l'utiliser que sur des petite formule(encore moins efficace avec -rand)
+
+
+CONCEPTION DES TESTS :
+Nous fait des tests sur des fichiers présent sur le site https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html pour des fnc satisfiable et non satisfiable
+Nous avons aussi créé des fnc vide avec des clauses vide pour vérifier si notre programme marche dans ces cas particuliers
+Et nous avons testé la fonction pre_traitement avec des fichiers présentant des clauses avec une variable et sa négation
+des clauses unitaires et des doublons dans les clauses.
